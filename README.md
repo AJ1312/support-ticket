@@ -129,3 +129,4 @@ The app works without an API key — the LLM classification feature will simply 
 
 This project was built as a technical assessment.
 # support-ticket
+# support-ticket
