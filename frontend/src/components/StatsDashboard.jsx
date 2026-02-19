@@ -41,7 +41,7 @@ function StatsDashboard({ refreshKey }) {
         <div className="stats-dashboard">
             <div className="card">
                 <div className="card-header">
-                    <h2>📊 Dashboard</h2>
+                    <h2>Dashboard</h2>
                     <p className="card-description">Real-time ticket analytics</p>
                 </div>
             </div>
@@ -49,17 +49,14 @@ function StatsDashboard({ refreshKey }) {
             {/* KPI Cards */}
             <div className="stats-kpi-row">
                 <div className="kpi-card kpi-total">
-                    <div className="kpi-icon">🎫</div>
                     <div className="kpi-value">{stats.total_tickets}</div>
                     <div className="kpi-label">Total Tickets</div>
                 </div>
                 <div className="kpi-card kpi-open">
-                    <div className="kpi-icon">🟢</div>
                     <div className="kpi-value">{stats.open_tickets}</div>
                     <div className="kpi-label">Open Tickets</div>
                 </div>
                 <div className="kpi-card kpi-avg">
-                    <div className="kpi-icon">📈</div>
                     <div className="kpi-value">{stats.avg_tickets_per_day}</div>
                     <div className="kpi-label">Avg / Day</div>
                 </div>
@@ -68,7 +65,7 @@ function StatsDashboard({ refreshKey }) {
             {/* Breakdowns */}
             <div className="stats-breakdown-row">
                 <div className="breakdown-card">
-                    <h3>⚡ Priority Breakdown</h3>
+                    <h3>Priority Breakdown</h3>
                     <div className="breakdown-bars">
                         {Object.entries(stats.priority_breakdown).map(([key, val]) => (
                             <div key={key} className="breakdown-item">
@@ -93,7 +90,7 @@ function StatsDashboard({ refreshKey }) {
                 </div>
 
                 <div className="breakdown-card">
-                    <h3>📂 Category Breakdown</h3>
+                    <h3>Category Breakdown</h3>
                     <div className="breakdown-bars">
                         {Object.entries(stats.category_breakdown).map(([key, val]) => (
                             <div key={key} className="breakdown-item">

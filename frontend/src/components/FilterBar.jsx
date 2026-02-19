@@ -20,7 +20,7 @@ function FilterBar({ filters, setFilters }) {
         <div className="filter-bar">
             <div className="filter-row">
                 <div className="filter-group">
-                    <label>🔍 Search</label>
+                    <label>Search</label>
                     <input
                         type="text"
                         name="search"
@@ -31,7 +31,7 @@ function FilterBar({ filters, setFilters }) {
                 </div>
 
                 <div className="filter-group">
-                    <label>📂 Category</label>
+                    <label>Category</label>
                     <select name="category" value={filters.category} onChange={handleChange}>
                         {CATEGORIES.map((c) => (
                             <option key={c} value={c}>
@@ -42,7 +42,7 @@ function FilterBar({ filters, setFilters }) {
                 </div>
 
                 <div className="filter-group">
-                    <label>⚡ Priority</label>
+                    <label>Priority</label>
                     <select name="priority" value={filters.priority} onChange={handleChange}>
                         {PRIORITIES.map((p) => (
                             <option key={p} value={p}>
@@ -53,7 +53,7 @@ function FilterBar({ filters, setFilters }) {
                 </div>
 
                 <div className="filter-group">
-                    <label>📊 Status</label>
+                    <label>Status</label>
                     <select name="status" value={filters.status} onChange={handleChange}>
                         {STATUSES.map((s) => (
                             <option key={s} value={s}>
@@ -65,7 +65,7 @@ function FilterBar({ filters, setFilters }) {
 
                 {hasFilters && (
                     <button className="btn btn-sm btn-ghost clear-btn" onClick={clearFilters}>
-                        ✕ Clear
+                        Clear
                     </button>
                 )}
             </div>

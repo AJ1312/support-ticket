@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 
 const STATUSES = ['open', 'in_progress', 'resolved', 'closed'];
 
-const STATUS_ICONS = {
-    open: '🟢',
-    in_progress: '🔵',
-    resolved: '✅',
-    closed: '⚫',
+const STATUS_LABELS = {
+    open: 'Open',
+    in_progress: 'In Progress',
+    resolved: 'Resolved',
+    closed: 'Closed',
 };
 
 const PRIORITY_COLORS = {
@@ -16,14 +16,7 @@ const PRIORITY_COLORS = {
     critical: 'priority-critical',
 };
 
-const CATEGORY_ICONS = {
-    billing: '💳',
-    technical: '🔧',
-    account: '👤',
-    general: '📌',
-};
-
-function TicketCard({ ticket, onStatusChange }) {
+function TicketCard({ ticket, onStatusChange, adminMode }) {
     const [editing, setEditing] = useState(false);
 
     const truncate = (text, maxLen = 120) =>
@@ -45,7 +38,7 @@ function TicketCard({ ticket, onStatusChange }) {
             <div className="ticket-card-header">
                 <span className="ticket-id">#{ticket.id}</span>
                 <span className={`status-badge status-${ticket.status}`}>
-                    {STATUS_ICONS[ticket.status]} {ticket.status.replace('_', ' ')}
+                    {STATUS_LABELS[ticket.status] || ticket.status.replace('_', ' ')}
                 </span>
             </div>
 
@@ -54,48 +47,56 @@ function TicketCard({ ticket, onStatusChange }) {
 
             <div className="ticket-meta">
                 <span className="meta-tag category-tag">
-                    {CATEGORY_ICONS[ticket.category]} {ticket.category}
+                    {ticket.category}
                 </span>
                 <span className={`meta-tag priority-tag ${PRIORITY_COLORS[ticket.priority]}`}>
                     {ticket.priority}
                 </span>
                 <span className="meta-tag date-tag">
-                    🕒 {formatDate(ticket.created_at)}
+                    {formatDate(ticket.created_at)}
                 </span>
             </div>
 
-            <div className="ticket-actions">
-                {!editing ? (
-                    <button
-                        className="btn btn-sm btn-outline"
-                        onClick={() => setEditing(true)}
-                    >
-                        Change Status
-                    </button>
-                ) : (
-                    <div className="status-change">
-                        {STATUSES.map((s) => (
-                            <button
-                                key={s}
-                                className={`btn btn-sm ${ticket.status === s ? 'btn-active' : 'btn-outline'}`}
-                                onClick={() => {
-                                    if (s !== ticket.status) onStatusChange(ticket.id, s);
-                                    setEditing(false);
-                                }}
-                                disabled={ticket.status === s}
-                            >
-                                {STATUS_ICONS[s]} {s.replace('_', ' ')}
-                            </button>
-                        ))}
+            {ticket.ai_response && (
+                <div className="ai-response-box">
+                    <strong>AI Response:</strong> {ticket.ai_response}
+                </div>
+            )}
+
+            {adminMode && (
+                <div className="ticket-actions">
+                    {!editing ? (
                         <button
-                            className="btn btn-sm btn-ghost"
-                            onClick={() => setEditing(false)}
+                            className="btn btn-sm btn-outline"
+                            onClick={() => setEditing(true)}
                         >
-                            ✕
+                            Change Status
                         </button>
-                    </div>
-                )}
-            </div>
+                    ) : (
+                        <div className="status-change">
+                            {STATUSES.map((s) => (
+                                <button
+                                    key={s}
+                                    className={`btn btn-sm ${ticket.status === s ? 'btn-active' : 'btn-outline'}`}
+                                    onClick={() => {
+                                        if (s !== ticket.status) onStatusChange(ticket.id, s);
+                                        setEditing(false);
+                                    }}
+                                    disabled={ticket.status === s}
+                                >
+                                    {STATUS_LABELS[s]}
+                                </button>
+                            ))}
+                            <button
+                                className="btn btn-sm btn-ghost"
+                                onClick={() => setEditing(false)}
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    )}
+                </div>
+            )}
         </div>
     );
 }

@@ -57,6 +57,7 @@ class Ticket(models.Model):
         choices=STATUS_CHOICES,
         default=STATUS_OPEN,
     )
+    ai_response = models.TextField(blank=True, default='')
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

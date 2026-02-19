@@ -1,72 +1,100 @@
 import React, { useState, useCallback } from 'react';
-import TicketForm from './components/TicketForm';
-import TicketList from './components/TicketList';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import Layout from './components/Layout';
+import AdminLogin from './components/AdminLogin';
 import StatsDashboard from './components/StatsDashboard';
+import TicketList from './components/TicketList';
+import TicketForm from './components/TicketForm';
+import './App.css';
 
-function App() {
+// ── Protected Route Wrapper ──────────────────────────
+
+const RequireAuth = ({ children }) => {
+    const token = localStorage.getItem('access_token');
+    const location = useLocation();
+
+    if (!token) {
+        return <Navigate to="/admin/login" state={{ from: location }} replace />;
+    }
+    return children;
+};
+
+// ── Pages ────────────────────────────────────────────
+
+const UserPanel = () => {
     const [refreshKey, setRefreshKey] = useState(0);
-    const [activeTab, setActiveTab] = useState('dashboard');
 
     const handleTicketCreated = useCallback(() => {
         setRefreshKey((prev) => prev + 1);
     }, []);
 
     return (
-        <div className="app">
-            <header className="app-header">
-                <div className="header-content">
-                    <div className="logo">
-                        <span className="logo-icon">🎫</span>
-                        <h1>Support Ticket System</h1>
-                    </div>
-                    <p className="header-subtitle">AI-powered ticket classification &amp; management</p>
-                </div>
-            </header>
+        <div className="panel-container">
+            <div className="panel-header">
+                <h2>User Support Panel</h2>
+                <p>Submit a ticket or view the public board.</p>
+            </div>
 
-            <nav className="tab-nav">
-                <button
-                    className={`tab-btn ${activeTab === 'dashboard' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('dashboard')}
-                >
-                    📊 Dashboard
-                </button>
-                <button
-                    className={`tab-btn ${activeTab === 'submit' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('submit')}
-                >
-                    ➕ Submit Ticket
-                </button>
-                <button
-                    className={`tab-btn ${activeTab === 'tickets' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('tickets')}
-                >
-                    📋 All Tickets
-                </button>
-            </nav>
+            <section className="section-block">
+                <h3>Submit a Ticket</h3>
+                <TicketForm onTicketCreated={handleTicketCreated} />
+            </section>
 
-            <main className="app-main">
-                {activeTab === 'dashboard' && (
-                    <StatsDashboard refreshKey={refreshKey} />
-                )}
-
-                {activeTab === 'submit' && (
-                    <TicketForm
-                        onTicketCreated={() => {
-                            handleTicketCreated();
-                            setActiveTab('tickets');
-                        }}
-                    />
-                )}
-
-                {activeTab === 'tickets' && (
-                    <TicketList refreshKey={refreshKey} onUpdate={handleTicketCreated} />
-                )}
-            </main>
-
-            <footer className="app-footer">
-                <p>Support Ticket System &mdash; Built with Django, React &amp; Google Gemini</p>
-            </footer>
+            <section className="section-block">
+                <h3>Public Ticket Board</h3>
+                <TicketList refreshKey={refreshKey} />
+            </section>
         </div>
+    );
+};
+
+const AdminPanel = () => {
+    const [refreshKey, setRefreshKey] = useState(0);
+
+    const handleUpdate = useCallback(() => {
+        setRefreshKey((prev) => prev + 1);
+    }, []);
+
+    return (
+        <div className="panel-container">
+            <div className="panel-header">
+                <h2>Admin Dashboard</h2>
+                <p>Manage tickets and view statistics.</p>
+            </div>
+
+            <section className="section-block">
+                <StatsDashboard refreshKey={refreshKey} />
+            </section>
+
+            <section className="section-block">
+                <h3>Ticket Management</h3>
+                <TicketList refreshKey={refreshKey} onUpdate={handleUpdate} adminMode={true} />
+            </section>
+        </div>
+    );
+};
+
+// ── App Component ────────────────────────────────────
+
+function App() {
+    return (
+        <Routes>
+            <Route path="/" element={<Layout />}>
+                {/* Public User Routes */}
+                <Route index element={<UserPanel />} />
+
+                {/* Admin Routes */}
+                <Route path="admin/login" element={<AdminLogin />} />
+                <Route
+                    path="admin/*"
+                    element={
+                        <RequireAuth>
+                            <AdminPanel />
+                        </RequireAuth>
+                    }
+                />
+            </Route>
+        </Routes>
     );
 }
 

@@ -3,7 +3,7 @@ import { getTickets, updateTicket } from '../api';
 import FilterBar from './FilterBar';
 import TicketCard from './TicketCard';
 
-function TicketList({ refreshKey, onUpdate }) {
+function TicketList({ refreshKey, onUpdate, adminMode }) {
     const [tickets, setTickets] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filters, setFilters] = useState({
@@ -49,7 +49,7 @@ function TicketList({ refreshKey, onUpdate }) {
         <div className="ticket-list-section">
             <div className="card">
                 <div className="card-header">
-                    <h2>📋 All Tickets</h2>
+                    <h2>All Tickets</h2>
                     <p className="card-description">{tickets.length} ticket{tickets.length !== 1 ? 's' : ''} found</p>
                 </div>
             </div>
@@ -63,7 +63,7 @@ function TicketList({ refreshKey, onUpdate }) {
                 </div>
             ) : tickets.length === 0 ? (
                 <div className="empty-state">
-                    <div className="empty-icon">🎫</div>
+                    <div className="empty-icon">—</div>
                     <h3>No tickets found</h3>
                     <p>Try adjusting your filters or create a new ticket</p>
                 </div>
@@ -73,6 +73,7 @@ function TicketList({ refreshKey, onUpdate }) {
                         <TicketCard
                             key={ticket.id}
                             ticket={ticket}
+                            adminMode={adminMode}
                             onStatusChange={handleStatusChange}
                         />
                     ))}

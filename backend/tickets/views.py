@@ -24,6 +24,7 @@ CLASSIFY_PROMPT = """You are a support ticket classification assistant.
 Given the following support ticket description, analyze it and determine:
 1. The most appropriate **category** — must be exactly one of: billing, technical, account, general
 2. The most appropriate **priority** — must be exactly one of: low, medium, high, critical
+3. A brief, professional **response** (1-2 sentences) acknowledging the issue and letting the user know an admin will review it. Be specific to the issue described.
 
 Guidelines for CATEGORY:
 - "billing": Payment issues, invoices, charges, refunds, subscription pricing
@@ -37,8 +38,14 @@ Guidelines for PRIORITY:
 - "medium": Feature partially broken, workaround exists, moderate inconvenience
 - "low": Minor cosmetic issue, general question, feature request, no immediate impact
 
+Guidelines for RESPONSE:
+- Be professional and empathetic
+- Acknowledge the specific issue briefly
+- End with something like "Our admin team will review and get back to you shortly."
+- Keep to 1-2 sentences max
+
 Respond ONLY with a valid JSON object in this exact format (no markdown, no extra text):
-{"suggested_category": "<category>", "suggested_priority": "<priority>"}
+{{"suggested_category": "<category>", "suggested_priority": "<priority>", "ai_response": "<response>"}}
 
 Ticket description:
 {description}"""
@@ -51,7 +58,7 @@ VALID_PRIORITIES = {'low', 'medium', 'high', 'critical'}
 def classify_with_llm(description: str) -> dict:
     """Call Google Gemini to classify a ticket description.
 
-    Returns a dict with suggested_category and suggested_priority.
+    Returns a dict with suggested_category, suggested_priority, and ai_response.
     On any failure, returns sensible defaults so ticket submission is never blocked.
     """
     api_key = settings.GEMINI_API_KEY
@@ -60,6 +67,7 @@ def classify_with_llm(description: str) -> dict:
         return {
             'suggested_category': 'general',
             'suggested_priority': 'medium',
+            'ai_response': 'Thank you for reaching out. Our admin team will review your ticket and get back to you shortly.',
         }
 
     try:
@@ -83,6 +91,7 @@ def classify_with_llm(description: str) -> dict:
 
         category = result.get('suggested_category', 'general').lower()
         priority = result.get('suggested_priority', 'medium').lower()
+        ai_response = result.get('ai_response', 'Thank you for reaching out. Our admin team will review your ticket and get back to you shortly.')
 
         # Validate against allowed choices
         if category not in VALID_CATEGORIES:
@@ -93,6 +102,7 @@ def classify_with_llm(description: str) -> dict:
         return {
             'suggested_category': category,
             'suggested_priority': priority,
+            'ai_response': ai_response,
         }
 
     except Exception as e:
@@ -100,6 +110,7 @@ def classify_with_llm(description: str) -> dict:
         return {
             'suggested_category': 'general',
             'suggested_priority': 'medium',
+            'ai_response': 'Thank you for reaching out. Our admin team will review your ticket and get back to you shortly.',
         }
 
 
@@ -122,6 +133,28 @@ class TicketViewSet(viewsets.ModelViewSet):
     ordering = ['-created_at']
     # Only allow list, create, partial_update (PATCH)
     http_method_names = ['get', 'post', 'patch', 'head', 'options']
+
+    def get_permissions(self):
+        """
+        Instantiates and returns the list of permissions that this view requires.
+        """
+        if self.action in ['update', 'partial_update', 'destroy', 'stats']:
+            from rest_framework.permissions import IsAdminUser
+            permission_classes = [IsAdminUser]
+        else:
+            from rest_framework.permissions import AllowAny
+            permission_classes = [AllowAny]
+        return [permission() for permission in permission_classes]
+
+    def perform_create(self, serializer):
+        """Generate an AI response on creation using Gemini, but respect user's category/priority."""
+        description = serializer.validated_data.get('description', '')
+        result = classify_with_llm(description)
+
+        # Only save the ai_response — do NOT override user-selected category/priority
+        serializer.save(
+            ai_response=result.get('ai_response', ''),
+        )
 
     @action(detail=False, methods=['get'], url_path='stats')
     def stats(self, request):
@@ -168,7 +201,7 @@ class TicketViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['post'], url_path='classify')
     def classify(self, request):
-        """Send a description to the LLM and get back suggested category + priority."""
+        """Send a description to the LLM and get back suggested category + priority + response."""
         serializer = ClassifySerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 

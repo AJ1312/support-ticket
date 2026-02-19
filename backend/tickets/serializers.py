@@ -9,7 +9,7 @@ class TicketSerializer(serializers.ModelSerializer):
         model = Ticket
         fields = [
             'id', 'title', 'description', 'category',
-            'priority', 'status', 'created_at',
+            'priority', 'status', 'ai_response', 'created_at',
         ]
         read_only_fields = ['id', 'created_at']
 

@@ -15,6 +15,7 @@ function TicketForm({ onTicketCreated }) {
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [aiResponse, setAiResponse] = useState('');
     const [aiSuggested, setAiSuggested] = useState(false);
     const debounceRef = useRef(null);
 
@@ -60,8 +61,11 @@ function TicketForm({ onTicketCreated }) {
         }
         setSubmitting(true);
         setError('');
+        setAiResponse('');
         try {
-            await createTicket(form);
+            const res = await createTicket(form);
+            const responseMsg = res.data.ai_response || 'Thank you for reaching out. Our admin team will review your ticket shortly.';
+            setAiResponse(responseMsg);
             setSuccess('Ticket created successfully!');
             setForm({ title: '', description: '', category: 'general', priority: 'medium' });
             setAiSuggested(false);
@@ -76,12 +80,18 @@ function TicketForm({ onTicketCreated }) {
     return (
         <div className="card ticket-form-card">
             <div className="card-header">
-                <h2>📝 Submit a New Ticket</h2>
+                <h2>Submit a New Ticket</h2>
                 <p className="card-description">Describe your issue and our AI will suggest a category and priority</p>
             </div>
             <form onSubmit={handleSubmit} className="ticket-form">
                 {error && <div className="alert alert-error">{error}</div>}
                 {success && <div className="alert alert-success">{success}</div>}
+
+                {aiResponse && (
+                    <div className="ai-response-banner">
+                        <strong>AI Response:</strong> {aiResponse}
+                    </div>
+                )}
 
                 <div className="form-group">
                     <label htmlFor="title">Title <span className="required">*</span></label>
@@ -114,13 +124,13 @@ function TicketForm({ onTicketCreated }) {
                 {classifying && (
                     <div className="ai-loading">
                         <span className="spinner"></span>
-                        <span>🤖 AI is analyzing your description...</span>
+                        <span>AI is analyzing your description...</span>
                     </div>
                 )}
 
                 {aiSuggested && !classifying && (
                     <div className="ai-suggested">
-                        ✨ AI suggested category &amp; priority below — feel free to override
+                        AI suggested category and priority below — feel free to override
                     </div>
                 )}
 
@@ -170,7 +180,7 @@ function TicketForm({ onTicketCreated }) {
                             <span className="spinner"></span> Submitting...
                         </>
                     ) : (
-                        '🚀 Submit Ticket'
+                        'Submit Ticket'
                     )}
                 </button>
             </form>
